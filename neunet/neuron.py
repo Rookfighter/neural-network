@@ -11,7 +11,7 @@ class Neuron:
     def __init__(self, neuronId, activity, inWeights, activityThreshold):
         self._activityFuncs = {
             'euler' : self._calcEulerActivity,
-            'jump'  : self._calcJumpActivity
+            'threshold'  : self._calcThresholdActivity
         }
 
         assert(activity in self._activityFuncs)
@@ -38,7 +38,7 @@ class Neuron:
     def _calcEulerActivity(self, netVal):
         return 1 / (1 + math.exp(-self._activityThreshold * netVal))
 
-    def _calcJumpActivity(self, netVal):
+    def _calcThresholdActivity(self, netVal):
         if netVal >= self._activityThreshold:
             return 1
         else:

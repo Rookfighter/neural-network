@@ -4,8 +4,6 @@ Created on 19 Oct 2016
 @author: Fabian Meyer
 '''
 
-import sys
-
 def binStrToVals(s):
     return [int(c) for c in s]
 
