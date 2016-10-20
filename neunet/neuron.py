@@ -53,6 +53,7 @@ class NeuralNetwork:
     def __init__(self, layers):
         self._nodes = []
         self._inEdges = []
+        self._outEdges = []
         self._layers = [[] for _ in xrange(layers)]
 
     def addNeuron(self, layer, activity, inWeights, activityThreshold):
@@ -61,14 +62,15 @@ class NeuralNetwork:
         nid = len(self._nodes)
         self._nodes.append(Neuron(nid, activity, inWeights, activityThreshold))
         self._inEdges.append([])
+        self._outEdges.append([])
         self._layers[layer].append(nid)
 
     def addEdge(self, neuronA, neuronB):
         assert(neuronA >= 0 and neuronA < len(self._nodes))
         assert(neuronB >= 0 and neuronB < len(self._nodes))
 
-        self._inEdges[neuronB] = neuronA
-
+        self._inEdges[neuronB].append(neuronA)
+        self._outEdges[neuronA].append(neuronB)
 
     def compute(self, inValsPerNeuron):
         assert(self._layers)
