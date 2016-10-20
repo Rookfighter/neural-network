@@ -16,18 +16,21 @@ if __name__ == '__main__':
     network.addNeuron(0, 'jump', [1, 1, 1, 1], 0.5)
 
 
-    trainer = training.Binary2UnaryTrainer(network, 0.2)
+    trainer = training.Binary2UnaryTrainer(network, 0.05)
     trainer.load('mytraining.txt')
     trainer.train()
 
-    print('Give me a number: ')
-    line = sys.stdin.readline().strip()
-    while line:
-        inVals = training.binStrToVals(line)
-        inVals = [inVals for _ in network._layers[0]]
-        outVals = network.compute(inVals)
-        print('-- {0}'.format(outVals))
-
+    try:
         print('Give me a number: ')
         line = sys.stdin.readline().strip()
+        while line:
+            inVals = training.binStrToVals(line)
+            inVals = [inVals for _ in network._layers[0]]
+            outVals = network.compute(inVals)
+            print('-- {0}'.format(outVals))
+
+            print('Give me a number: ')
+            line = sys.stdin.readline().strip()
+    except KeyboardInterrupt:
+        print('')
 

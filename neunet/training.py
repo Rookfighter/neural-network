@@ -4,6 +4,8 @@ Created on 19 Oct 2016
 @author: Fabian Meyer
 '''
 
+import sys
+
 def binStrToVals(s):
     return [int(c) for c in s]
 
@@ -65,5 +67,5 @@ class Binary2UnaryTrainer:
 
         print('Done with training.')
         for n in self._network._nodes:
-            print('-- _id: {0}; weights: {1}'.format(n._id, n._inWeights))
+            print('-- id: {0}; weights: {1}'.format(n._id, n._inWeights))
 
