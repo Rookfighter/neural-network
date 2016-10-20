@@ -8,6 +8,10 @@ def binStrToVals(s):
     return [int(c) for c in s]
 
 class Binary2UnaryTrainer:
+    '''
+    Trainer that implements delta learning for
+    a binary to unary converter.
+    '''
 
     def __init__(self, network, learnfac):
 

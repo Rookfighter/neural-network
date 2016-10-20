@@ -10,7 +10,8 @@ class Neuron:
 
     def __init__(self, neuronId, activity, inWeights, activityThreshold):
         self._activityFuncs = {
-            'euler' : self._calcEulerActivity,
+            'linear' : self._calcLinearActivity,
+            'log' : self._calcLogActivity,
             'threshold'  : self._calcThresholdActivity
         }
 
@@ -35,7 +36,10 @@ class Neuron:
 
         return sum([w * v for w, v in zip(self._inWeights, inVals)])
 
-    def _calcEulerActivity(self, netVal):
+    def _calcLinearActivity(self, netval):
+        return netval * self._activityThreshold
+
+    def _calcLogActivity(self, netVal):
         return 1 / (1 + math.exp(-self._activityThreshold * netVal))
 
     def _calcThresholdActivity(self, netVal):

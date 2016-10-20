@@ -21,7 +21,6 @@ if __name__ == '__main__':
     network.addNeuron(0, 'threshold', [1, 1, 1, 1], 0.5)
     network.addNeuron(0, 'threshold', [1, 1, 1, 1], 0.5)
 
-
     trainer = training.Binary2UnaryTrainer(network, 0.05)
     trainer.load('training/bin2un.txt')
     trainer.train()
