@@ -75,10 +75,11 @@ class XorTrainer:
     with Resilient Propagation.
     '''
 
-    def __init__(self, network, learnfac):
+    def __init__(self, network, learnfac, maxerr):
         self._network = network
         self._data = []
         self.learnfac = learnfac
+        self.maxerr = maxerr
 
     def load(self, fileName):
         print('Reading file "{0}" ...'.format(fileName))
@@ -101,45 +102,55 @@ class XorTrainer:
 
         errVals = [[dict() for _ in l] for l in self._network._layers]
         cycles = 0
-        while cycles < 100:
+        totalErr = self.maxerr * 2
+        # train until x cycles is reached
+        while totalErr > self.maxerr and cycles < 1000:
             totalErr = 0
             cycles = cycles + 1
 
             for dat in self._data:
                 outVals = self._network.compute(dat[0])
 
-                assert(len(outVals) == len(self._network._layers))
-                for n, exp, act in zip(self._network._layers[-1], dat[1], outVals):
-                    errVals[-1][n]['o'] = act
-                    errVals[-1][n]['f'] = exp - act
-                    errVals[-1][n]['fsig'] = act * (1 - act) * errVals[0][n]['f']
-                    totalErr = totalErr + pow(errVals[0][n]['f'], 2)
+                # loop first through output layer
+                assert(len(outVals) == len(errVals[-1]))
+                for exp, act, err1 in zip(dat[1], outVals, errVals[-1]):
+                    err = exp - act
+                    errsig = act * (1 - act) * err
+                    err1['o'] = act
+                    err1['err'] = err
+                    err1['errsig'] = errsig
+                    totalErr = totalErr + pow(err, 2)
 
                 # go through all remaining layers
-                for l in range(len(self._network._layers) - 2, -1, -1):
-                    for n1, err1 in zip(self._network._layers[l], errVals[l]):
-                        fsum = 0
-                        for n2, err2 in zip(self._network._layers[l + 1], errVals[l]):
-                            inIdx = -1
-                            for e in range(len(self._network._inEdges[n2])):
-                                if self._network._inEdges[n2][e] == n2:
-                                    inIdx = e
-                                    break
-                            if inIdx == -1:
-                                continue
+                for lidx in range(len(self._network._layers) - 2, -1, -1):
+                    lcurr = self._network._layers[lidx]
+                    lnext = self._network._layers[lidx + 1]
+                    errCurr = errVals[lidx]
+                    errNext = errVals[lidx + 1]
 
-                            fsum = fsum + self._network._neurons[n2]._inWeights[inIdx] * err2['fsig']
+                    # go through all neurons in current layer
+                    for n1, err1 in zip(lcurr, errCurr):
+                        errsum = 0
 
-                        err1['o'] = self._network._neurons[n1]._outVal
-                        err1['fsig'] = err1['o'] * (1 - err1['o']) * fsum
+                        # go through all neurons in next layer
+                        for n2, err2 in zip(lnext, errNext):
+                            neuron2 = self._network._nodes[n2]
+                            inEdges2 = self._network._inEdges[n2]
 
-                        for n2, err2 in zip(self._network._layers[l + 1], errVals[l]):
-                            inIdx = -1
-                            for e in range(len(self._network._inEdges[n2])):
-                                if self._network._inEdges[n2][e] == n2:
-                                    inIdx = e
-                                    break
-                            if inIdx == -1:
-                                continue
+                            # find weight that maps to n1
+                            for inE, w in zip(inEdges2, neuron2._inWeights):
+                                if inE == n1:
+                                    errsum = errsum + w * err2['errsig']
 
+                        err1['o'] = self._network._nodes[n1]._outVal
+                        err1['errsig'] = err1['o'] * (1 - err1['o']) * errsum
 
+                        for n2, err2 in zip(lnext, errNext):
+                            neuron2 = self._network._nodes[n2]
+                            inEdges2 = self._network._inEdges[n2]
+
+                            # find weight that maps to n1
+                            for widx in range(len(neuron2._inWeights)):
+                                if inEdges2[widx] == n1:
+                                    neuron2._inWeights[widx] = neuron2._inWeights[widx] + self.learnfac * err1['o'] * err2['errsig']
+            print('-- totalerr: {0}; maxerr: {1}'.format(totalErr, self.maxerr))
