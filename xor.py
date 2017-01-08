@@ -16,16 +16,16 @@ def build_network():
     in2 = network.create_neuron(0, [0, 1], 0.5, 'threshold')
 
     # hidden layer
-    h1 = network.create_neuron(1, nn.rand_weights(2), 0.5, 'threshold')
+    h1 = network.create_neuron(1, nn.rand_weights(2), 1, 'log')
     network.create_connection(in1, h1)
     network.create_connection(in2, h1)
 
-    h2 = network.create_neuron(1, nn.rand_weights(2), 0.5, 'threshold')
+    h2 = network.create_neuron(1, nn.rand_weights(2), 1, 'log')
     network.create_connection(in1, h2)
     network.create_connection(in2, h2)
 
     # output layer
-    out1 = network.create_neuron(2, nn.rand_weights(2), 0.5, 'threshold')
+    out1 = network.create_neuron(2, nn.rand_weights(2), 1, 'log')
     network.create_connection(h1, out1)
     network.create_connection(h2, out1)
 
@@ -52,6 +52,7 @@ if __name__ == '__main__':
                 print('Error: 2 digits only!')
             else:
                 outvals = network.update(invals)
+                outvals = [round(v) for v in outvals]
 
                 print('{} => {}'.format(
                     nn.vals_to_str(invals),

@@ -59,7 +59,8 @@ class neural_network:
 
         self.neurons = []
         self.layers = [[] for _ in range(layer_count)]
-        self.edges = {}
+        self.edges_ba = []
+        self.edges_ab = []
 
     def create_neuron(self, layer, weights, activity_param=0.5, activity_func='threshold'):
         '''
@@ -79,7 +80,8 @@ class neural_network:
 
         self.neurons.append(neuron(uid, weights, activity_param, activity_func))
         self.layers[layer].append(uid)
-        self.edges[uid] = []
+        self.edges_ab.append([])
+        self.edges_ba.append([])
 
         return uid
 
@@ -95,13 +97,14 @@ class neural_network:
         assert(uid_a >= 0 and uid_a < len(self.neurons))
         assert(uid_b >= 0 and uid_b < len(self.neurons))
 
-        self.edges[uid_b].append(uid_a)
+        self.edges_ba[uid_b].append(uid_a)
+        self.edges_ab[uid_a].append(uid_b)
 
     def __update_layer(self, layer):
         # go through all neurons in this layer
         for uid in layer:
             # create input vector
-            invals = [self.neurons[i].outval for i in self.edges[uid]]
+            invals = [self.neurons[i].outval for i in self.edges_ba[uid]]
             self.neurons[uid].update(invals)
 
     def update(self, invals):
@@ -184,7 +187,7 @@ def delta_training(network, data):
     # learnfac determines strength of learning effect
     learnfac = 0.05
 
-    def train_delta_step():
+    def train_step():
         '''
         A single training step that goes through all data samples
         and applies the delta learning rule.
@@ -227,7 +230,7 @@ def delta_training(network, data):
         return True
 
     while True:
-        train_delta_step()
+        train_step()
         if check_train_results():
             break
 
@@ -247,4 +250,67 @@ def back_propagation(network, data):
     @param data: the data which is used to train the network
     '''
 
-    pass
+    learnfac = 15
+    min_err = 0.3
+    max_cycles = 100000
+
+    cycles = 0
+    total_err = 0
+
+    def train_step():
+        '''
+        A single training step that goes through all data samples
+        and applies the back propagation rule.
+        '''
+
+        nonlocal cycles, total_err
+
+        cycles += 1
+        total_err = 0
+        errsig = [ 0 for _ in network.neurons]
+
+        for sample in data:
+            outvals = network.update(sample[0])
+
+            # go through all output neurons
+            # and calculate their error
+            for exp, act, uid in zip(sample[1], outvals, network.layers[-1]):
+                err = exp - act
+                errsig[uid] = act * (1 - act) * err
+                total_err += math.pow(err, 2)
+
+            # go through all remaining layers
+            # backwards and calculate their error
+            for l in range(len(network.layers) - 2, -1, -1):
+                for uid1 in network.layers[l]:
+                    errsum = 0
+                    n1 = network.neurons[uid1]
+
+                    # go through all neurons in next layer
+                    # and calculate error from connected ones
+                    for uid2 in network.layers[l + 1]:
+                        n2 = network.neurons[uid2]
+                        for i, inuid in enumerate(network.edges_ba[uid2]):
+                            if inuid == uid1:
+                                errsum += n2.weights[i] * errsig[uid2]
+
+                    # calculate error signal
+                    errsig[uid1] = n1.outval * (1 - n1.outval) * errsum
+
+                    # go through all neurons in next layer
+                    # and apply new weights
+                    for uid2 in network.layers[l + 1]:
+                        n2 = network.neurons[uid2]
+                        for i, inuid in enumerate(network.edges_ba[uid2]):
+                            if inuid == uid1:
+                                n2.weights[i] = n2.weights[i] + learnfac * errsig[uid2] * n1.outval
+
+    def check_train_results():
+        return total_err <= min_err or cycles >= max_cycles
+
+    while True:
+        train_step()
+        print('total_err: {}'.format(total_err))
+        if check_train_results():
+            break
+
