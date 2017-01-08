@@ -5,6 +5,7 @@ Created on 25 Dec 2016
 '''
 import random
 import math
+import csv
 
 def _threshold_func(x, threshold):
     if x >= threshold:
@@ -15,6 +16,9 @@ def _threshold_func(x, threshold):
 def _log_func(x, fac):
     return 1 / (1 + math.exp(-fac * x))
 
+def _linear_func(x, fac):
+    return x * fac
+
 class neuron:
 
     def __init__(self, uid, weights, activity_param, activity_func):
@@ -24,7 +28,8 @@ class neuron:
         self.outval = 0
         self.__activity_funcs = {
             'threshold' : _threshold_func,
-            'log' : _log_func
+            'log' : _log_func,
+            'linear' : _linear_func
         }
         self.__activity_func = self.__activity_funcs[activity_func]
 
@@ -168,6 +173,44 @@ def load_bin_data(filename):
 
     return data
 
+def load_iris_data(filename):
+    '''
+    Loads iris training data from the given file.
+
+    The result has the following format:
+
+    [
+        (invals1, outvals1),
+        (invals2, outvals2),
+        (invals3, outvals3),
+        ...
+    ]
+
+    @param filename: path to the file with the training data
+
+    @return: matrix of training data
+    '''
+
+    classmap = {
+        'setosa' : [1, 0, 0],
+        'versicolor' : [0, 1, 0],
+        'virginica' : [0, 0, 1]
+        }
+
+    data = []
+    with open(filename) as f:
+        r = csv.reader(f, delimiter=',', quotechar='"')
+        first = True
+        for l in r:
+            if first:
+                first = False
+                continue
+
+            d = ([ float(v) for v in l[1:5] ], classmap[l[5]])
+            data.append(d)
+
+    return data
+
 def delta_training(network, data, learnfac=0.05):
     '''
     Trains the given network with delta learning rule. The parameter
@@ -303,6 +346,7 @@ def back_propagation(network, data, learnfac=0.5, min_err=0.3, max_cycles=10000)
 
     while True:
         train_step()
+        print(total_err)
         if check_train_results():
             break
 
