@@ -8,7 +8,7 @@ import sys
 import math
 import neuralnetwork as nn
 
-def bin_to_dec(binvals):
+def bin2dec(binvals):
     result = 0
     binlen = len(binvals)
     for i in range(binlen):
@@ -16,15 +16,14 @@ def bin_to_dec(binvals):
             result += math.pow(2, binlen - i - 1)
     return int(result)
 
-def un_to_dec(unvals):
+def un2dec(unvals):
     result = 0
     for i in unvals:
         if i == 1:
             result += 1
     return int(result)
 
-if __name__ == '__main__':
-
+def build_network():
     network = nn.neural_network(2)
 
     # input layer
@@ -34,12 +33,18 @@ if __name__ == '__main__':
     network.create_neuron(0, [0, 0, 0, 1])
 
     # output layer
-    for i in range(15):
+    for _ in range(15):
         uid = network.create_neuron(1, nn.rand_weights(4))
         network.create_connection(0, uid)
         network.create_connection(1, uid)
         network.create_connection(2, uid)
         network.create_connection(3, uid)
+
+    return network
+
+if __name__ == '__main__':
+
+    network = build_network()
 
     # train the network
     print('Training network ...')
@@ -61,9 +66,9 @@ if __name__ == '__main__':
 
                 print('{} ({}) => {} ({})'.format(
                     nn.vals_to_str(invals),
-                    bin_to_dec(invals),
+                    bin2dec(invals),
                     nn.vals_to_str(outvals),
-                    un_to_dec(outvals)))
+                    un2dec(outvals)))
 
             print('Give me a number: ')
             line = sys.stdin.readline().strip()
