@@ -168,7 +168,7 @@ def load_bin_data(filename):
 
     return data
 
-def delta_training(network, data):
+def delta_training(network, data, learnfac=0.05):
     '''
     Trains the given network with delta learning rule. The parameter
     data has to have the following format:
@@ -183,9 +183,6 @@ def delta_training(network, data):
     @param network: the network to be trained
     @param data: the data which is used to train the network
     '''
-
-    # learnfac determines strength of learning effect
-    learnfac = 0.05
 
     def train_step():
         '''
@@ -234,7 +231,7 @@ def delta_training(network, data):
         if check_train_results():
             break
 
-def back_propagation(network, data):
+def back_propagation(network, data, learnfac=0.5, min_err=0.3, max_cycles=10000):
     '''
     Trains the given network with back propagation rule. The parameter
     data has to have the following format:
@@ -249,10 +246,6 @@ def back_propagation(network, data):
     @param network: the network to be trained
     @param data: the data which is used to train the network
     '''
-
-    learnfac = 15
-    min_err = 0.3
-    max_cycles = 100000
 
     cycles = 0
     total_err = 0
@@ -310,7 +303,6 @@ def back_propagation(network, data):
 
     while True:
         train_step()
-        print('total_err: {}'.format(total_err))
         if check_train_results():
             break
 
