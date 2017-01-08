@@ -1,45 +1,63 @@
 '''
-Created on 20 Oct 2016
+Created on 08 Jan 2017
 
 @author: Fabian Meyer
 '''
 
-import neunet.neuron as neuron
-import neunet.training as training
 import sys
-import random
+import neuralnetwork as nn
 
-def rndInWeights(c):
-    return [ random.random() for _ in range(c)]
+def build_network():
+
+    network = nn.neural_network(3)
+
+    # input layer
+    in1 = network.create_neuron(0, [1, 0], 0.5, 'threshold')
+    in2 = network.create_neuron(0, [0, 1], 0.5, 'threshold')
+
+    # hidden layer
+    h1 = network.create_neuron(1, nn.rand_weights(2), 0.5, 'threshold')
+    network.create_connection(in1, h1)
+    network.create_connection(in2, h1)
+
+    h2 = network.create_neuron(1, nn.rand_weights(2), 0.5, 'threshold')
+    network.create_connection(in1, h2)
+    network.create_connection(in2, h2)
+
+    # output layer
+    out1 = network.create_neuron(2, nn.rand_weights(2), 0.5, 'threshold')
+    network.create_connection(h1, out1)
+    network.create_connection(h2, out1)
+
+    return network
 
 if __name__ == '__main__':
-    network = neuron.NeuralNetwork(3)
 
-    network.addNeuron(0, 'linear', [1], 0.5)
-    network.addNeuron(0, 'linear', [1], 0.5)
-    network.addNeuron(1, 'log', rndInWeights(2), 1)
-    network.addNeuron(2, 'log', rndInWeights(3), 1)
+    network = build_network()
 
-    network.addEdge(0, 2)
-    network.addEdge(1, 2)
-    network.addEdge(0, 3)
-    network.addEdge(1, 3)
-    network.addEdge(2, 3)
+    # train the network
+    print('Training network ...')
+    data = nn.load_bin_data('data/xor.txt')
+    nn.back_propagation(network, data)
+    print('Training finished!')
 
-    trainer = training.XorTrainer(network, 5, 0.3)
-    trainer.load('training/xor.txt')
-    trainer.train()
-
+    # wait for input to test trained network
     try:
-        while True:
+        print('Give me a number: ')
+        line = sys.stdin.readline().strip()
+        while line:
+            invals = nn.str_to_vals(line)
+
+            if len(invals) != 2:
+                print('Error: 2 digits only!')
+            else:
+                outvals = network.update(invals)
+
+                print('{} => {}'.format(
+                    nn.vals_to_str(invals),
+                    nn.vals_to_str(outvals)))
+
             print('Give me a number: ')
             line = sys.stdin.readline().strip()
-            if not line:
-                break
-
-            inVals = training.binStrToVals(line)
-            inVals = [[val] for val in inVals]
-            outVals = network.compute(inVals)
-            print('-- {0}'.format(round(outVals[0])))
     except KeyboardInterrupt:
         print('')
